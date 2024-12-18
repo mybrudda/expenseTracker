@@ -1,5 +1,8 @@
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import {
+    Alert,
     Keyboard,
     Text,
     TextInput,
@@ -8,11 +11,49 @@ import {
     View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { auth, db } from "../FirebaseConfig";
 import { authstyle } from "../styles/AuthStyle";
 const Register = ({ navigation }) => {
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("")
+
+
+  const onRegister = async () => {
+    try {
+        if(username && email && password){
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+            const user = userCredential.user
+
+            await updateProfile(user, {
+                displayName: username,
+            })
+
+            await setDoc(doc(db, 'users', user.uid),{
+                username: username,
+                email: email,
+                createdAt: serverTimestamp(),
+            })
+
+            setUsername('')
+            setEmail('')
+            setPassword('')
+            setErrorMsg('')
+
+            Alert.alert('User ' + user.displayName + ' created!')
+
+            navigation.navigate('Login')
+
+        } else{
+            setErrorMsg('Please fill in all the fields')
+        }
+    } catch (error) {
+        console.log('Error: ', error.message)
+        setErrorMsg('User already exists with this email')
+    }
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -20,6 +61,10 @@ const Register = ({ navigation }) => {
         <View style={authstyle.authForm}>
 
           <Text style={authstyle.title}>Create new account</Text>
+
+          {
+            errorMsg ? <Text style={authstyle.errorMsg}>{errorMsg}</Text> : null
+          }
 
           <View style={authstyle.inputContainer}>
             <Ionicons
@@ -72,7 +117,7 @@ const Register = ({ navigation }) => {
 
           <TouchableOpacity
             style={authstyle.buttonContainer}
-            onPress={() => navigation.navigate("Login")}
+            onPress={onRegister}
           >
             <Text style={authstyle.buttonText}>Register</Text>
           </TouchableOpacity>

@@ -57,9 +57,11 @@ export const authstyle = StyleSheet.create({
     normalText:{
         fontSize: 14,
         color: 'blue'
+    },
+    errorMsg:{
+        color: 'red',
+        marginBottom: 20
     }
  
-
-
 })
 

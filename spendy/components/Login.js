@@ -1,3 +1,4 @@
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import {
     Keyboard,
@@ -8,17 +9,42 @@ import {
     View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { auth } from "../FirebaseConfig";
 import { authstyle } from "../styles/AuthStyle";
 
 const Login = ({ navigation }) => {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("")
+
+  const onLogin = async () => {
+    try {
+        if(email && password){
+            await signInWithEmailAndPassword(auth, email, password)
+
+            setEmail('')
+            setPassword('')
+
+            navigation.navigate('ExpenseOverview')
+        } else{
+            setErrorMsg('Please fill in all the fields')
+        }
+    } catch (error) {
+        console.log('error: ', error.message)
+        setErrorMsg('Email or password not valid')
+    }
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={authstyle.container}>
         <View style={authstyle.authForm}>
           <Text style={authstyle.title}>Login screen</Text>
+
+          {
+            errorMsg ? <Text style={authstyle.errorMsg}>{errorMsg}</Text> : null
+          }
 
           <View style={authstyle.inputContainer}>
             <Ionicons
@@ -55,7 +81,7 @@ const Login = ({ navigation }) => {
 
           <TouchableOpacity
             style={authstyle.buttonContainer}
-            onPress={() => navigation.navigate("ExpenseOverview")}
+            onPress={onLogin}
           >
             <Text style={authstyle.buttonText}>Login</Text>
           </TouchableOpacity>
