@@ -1,5 +1,7 @@
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
 import {
+    Alert,
     Keyboard,
     KeyboardAvoidingView,
     ScrollView,
@@ -10,17 +12,19 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
+import { db } from "../FirebaseConfig";
 
 const AddExpense = () => {
-  const [amount, setAmount] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [description, setDescription] = useState("");
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [expenseDescription, setExpenseDescription] = useState("");
 
-  const currentUser = useSelector((state) => state.user);
+  const userProfile = useSelector((state) => state.user);
 
-  const categories = [
+  const expenseCategories = [
     { id: "1", name: "Rent", icon: "home" },
     { id: "2", name: "Shopping", icon: "cart" },
     { id: "3", name: "Food", icon: "food" },
@@ -34,10 +38,48 @@ const AddExpense = () => {
     { id: "11", name: "Education", icon: "school" },
   ];
 
-  const onSubmitForm = () => {
-    console.log(amount);
-    console.log(selectedCategory);
-    console.log(description);
+  const handleSubmitExpense = async () => { 
+    if (!userProfile || !userProfile.uid) {
+        Alert.alert('Please log in to add an expense.');
+        return; 
+    }
+
+    try {
+        if(expenseAmount && selectedCategoryId && expenseDescription){
+            await addDoc(
+            collection(db, "users", userProfile.uid, "savedExpenses"),
+            {
+            amount: expenseAmount,
+            category: expenseCategories.find(category => category.id === selectedCategoryId)?.name,
+            categoryId: selectedCategoryId,
+            description: expenseDescription,
+            SavedAt: serverTimestamp(),
+            }
+            );
+
+            Toast.show({
+                type: 'success',
+                position: 'top',
+                text1: 'Expense Saved!',
+                text2: 'Your expense has been successfully saved.',
+                visibilityTime: 3000,
+              });
+
+            setExpenseAmount('')
+            setSelectedCategoryId('')
+            setExpenseDescription('')
+        } else{
+            Toast.show({
+                type: 'error',
+                position: 'top',
+                text1: 'Something went wrong!',
+                text2: 'Fill in all the fields and try again saving.',
+                visibilityTime: 3000,
+              });
+        }
+    } catch (error) {
+      console.log('Error: ', error.message);
+    }
   };
 
   return (
@@ -46,13 +88,10 @@ const AddExpense = () => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.container}>
             <View style={styles.formContainer}>
-
-            <Text>{currentUser.displayName}</Text>
-
               <TextInput
                 placeholder="Add expense amount"
-                value={amount}
-                onChangeText={setAmount}
+                value={expenseAmount}
+                onChangeText={setExpenseAmount}
                 keyboardType="numeric"
                 style={styles.input}
               />
@@ -62,14 +101,14 @@ const AddExpense = () => {
                 showsHorizontalScrollIndicator={false}
                 style={styles.scrollView}
               >
-                {categories.map((category) => (
+                {expenseCategories.map((category) => (
                   <TouchableOpacity
                     key={category.id}
                     style={[
                       styles.button,
-                      selectedCategory === category.id && styles.selectedButton,
+                      selectedCategoryId === category.id && styles.selectedButton,
                     ]}
-                    onPress={() => setSelectedCategory(category.id)} // pass category ID here
+                    onPress={() => setSelectedCategoryId(category.id)}
                   >
                     <Icon name={category.icon} size={40} color="#9c66cc" />
                     <Text style={styles.buttonText}>{category.name}</Text>
@@ -79,15 +118,15 @@ const AddExpense = () => {
 
               <TextInput
                 placeholder="Description..."
-                value={description}
-                onChangeText={setDescription}
+                value={expenseDescription}
+                onChangeText={setExpenseDescription}
                 style={styles.multilineInput}
                 multiline={true}
                 numberOfLines={5}
               />
 
               <TouchableOpacity
-                onPress={onSubmitForm}
+                onPress={handleSubmitExpense}
                 style={styles.buttonContainer}
               >
                 <Text style={styles.submitButtonText}>Add</Text>
@@ -137,12 +176,6 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     backgroundColor: "#f8f4fc",
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
-    fontWeight: "bold",
-    color: "#7a4fa1",
-  },
   scrollView: {
     flexGrow: 0,
     width: "90%",
@@ -169,7 +202,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   buttonContainer: {
-    width: "100%",
+    width: "90%",
     height: 50,
     backgroundColor: "#9c66cc",
     marginVertical: 20,

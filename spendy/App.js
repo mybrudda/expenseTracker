@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import Toast from 'react-native-toast-message';
 import { Provider } from "react-redux";
 import AddExpense from './components/AddExpense';
 import AllTimeExpenses from './components/AllTimeExpenses';
@@ -30,7 +31,9 @@ export default function App() {
   return (
     <Provider store={store}>
     <StatusBar style="auto" />
+    
     <NavigationContainer>
+      
       <Stack.Navigator
        screenOptions={{
         headerStyle: {backgroundColor: 'purple'},
@@ -44,6 +47,7 @@ export default function App() {
         <Stack.Screen name='AddExpense' component={AddExpense}/>
       </Stack.Navigator>
     </NavigationContainer>
+    <Toast/>
     </Provider>
   );
 }
