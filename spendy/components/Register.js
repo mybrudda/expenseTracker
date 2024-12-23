@@ -2,13 +2,13 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import {
-    Alert,
-    Keyboard,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Alert,
+  Keyboard,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { auth, db } from "../FirebaseConfig";
@@ -60,7 +60,7 @@ const Register = ({ navigation }) => {
       <View style={authstyle.container}>
         <View style={authstyle.authForm}>
 
-          <Text style={authstyle.title}>Create new account</Text>
+          <Text style={authstyle.title}>Create an Account</Text>
 
           {
             errorMsg ? <Text style={authstyle.errorMsg}>{errorMsg}</Text> : null

@@ -44,7 +44,7 @@ const Login = ({ navigation }) => {
 
           navigation.reset({
             index: 0,
-            routes: [{ name: "AddExpense" }],
+            routes: [{ name: "ExpenseOverview" }],
           });
         }
       } else {
@@ -60,7 +60,7 @@ const Login = ({ navigation }) => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={authstyle.container}>
         <View style={authstyle.authForm}>
-          <Text style={authstyle.title}>Login screen</Text>
+          <Text style={authstyle.title}>Log In to Your Account</Text>
 
           {errorMsg ? <Text style={authstyle.errorMsg}>{errorMsg}</Text> : null}
 
