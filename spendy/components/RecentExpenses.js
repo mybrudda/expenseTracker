@@ -2,12 +2,12 @@ import { format } from "date-fns";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
@@ -49,11 +49,17 @@ const RecentExpenses = ({ navigation }) => {
         const expensesQuery = query(savedExpensesRef, orderBy("SavedAt", "desc"));
         const querySnapshot = await getDocs(expensesQuery);
 
+        
+        const now = new Date();
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+
         const expenses = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
           SavedAt: doc.data().SavedAt?.toDate(),
-        }));
+          amount: parseFloat(doc.data().amount) || 0,
+        })).filter((expense) => expense.SavedAt && expense.SavedAt >= sevenDaysAgo)
 
         setSavedExpenses(expenses);
       }
@@ -94,10 +100,13 @@ const RecentExpenses = ({ navigation }) => {
     );
   };
 
+  const sevenDaysTotal = savedExpenses.reduce((total, expense) => total + expense.amount, 0);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Past 7 days</Text>
+        <Text style={styles.headerText}>Past 7 Days</Text>
+        <Text style={styles.headerTotalSpent}>Total: {sevenDaysTotal}</Text>
         <TouchableOpacity>
           <Icon
             name="plus-circle"
@@ -145,6 +154,12 @@ const styles = StyleSheet.create({
   headerText: {
     color: "#4c2c8f",
     fontSize: 16,
+  },
+  headerTotalSpent:{
+    color: "#4c2c8f",
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1
   },
   loader: {
     flex: 1,
