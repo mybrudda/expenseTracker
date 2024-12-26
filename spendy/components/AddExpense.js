@@ -1,16 +1,16 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
 import {
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import Toast from 'react-native-toast-message';
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -96,6 +96,11 @@ const AddExpense = () => {
             return;
         }
 
+        if(isNaN(expenseAmount)){
+            showErrorToast('Numeric value only','Please enter a numeric value for amount')
+            return;f
+        }
+
         try {
             await addDoc(collection(db, "users", userProfile.uid, "savedExpenses"), {
                 amount: expenseAmount,
@@ -122,11 +127,11 @@ const AddExpense = () => {
         });
     };
 
-    const showErrorToast = (message) => {
+    const showErrorToast = (title ,message) => {
         Toast.show({
             type: 'error',
             position: 'top',
-            text1: 'Something went wrong!',
+            text1: title || 'Something went wrong!',
             text2: message,
             visibilityTime: 3000,
         });

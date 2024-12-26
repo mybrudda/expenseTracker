@@ -19,24 +19,19 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const onLogin = async () => {
     try {
       if (email && password) {
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        if (user) {
+        if (user && user.emailVerified) {
           dispatch(setUser({
-              displayName: user.displayName,
-              uid: user.uid,
-            })
-          );
+            displayName: user.displayName,
+            uid: user.uid,
+          }));
 
           setEmail("");
           setPassword("");
@@ -46,6 +41,8 @@ const Login = ({ navigation }) => {
             index: 0,
             routes: [{ name: "ExpenseOverview" }],
           });
+        } else {
+          setErrorMsg("Please verify your email address.");
         }
       } else {
         setErrorMsg("Please fill in all the fields");

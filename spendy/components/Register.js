@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import {
@@ -30,6 +30,8 @@ const Register = ({ navigation }) => {
             await updateProfile(user, {
                 displayName: username,
             })
+
+            await sendEmailVerification(user);
 
             await setDoc(doc(db, 'users', user.uid),{
                 username: username,
