@@ -16,22 +16,7 @@ import Toast from 'react-native-toast-message';
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 import { db } from "../FirebaseConfig";
-
-
-const expenseCategories = [
-    { id: "1", name: "Rent", icon: "home" },
-    { id: "2", name: "Shopping", icon: "cart" },
-    { id: "3", name: "Food", icon: "food" },
-    { id: "4", name: "Transportation", icon: "car" },
-    { id: "5", name: "Utilities", icon: "flash" },
-    { id: "6", name: "Entertainment", icon: "movie" },
-    { id: "7", name: "Healthcare", icon: "hospital-box" },
-    { id: "8", name: "Fitness", icon: "dumbbell" },
-    { id: "9", name: "Insurance", icon: "shield-account" },
-    { id: "10", name: "Travel", icon: "airplane" },
-    { id: "11", name: "Education", icon: "school" },
-];
-
+import { expenseCategories } from "./expenseCategories";
 
 const ExpenseInput = ({ expenseAmount, setExpenseAmount }) => (
     <TextInput
@@ -144,16 +129,16 @@ const AddExpense = () => {
     };
 
     return (
-        <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.screen} showsVerticalScrollIndicator={false} >
             <KeyboardAvoidingView style={styles.screen} behavior="position">
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={styles.container}>
-                        <View style={styles.formContainer}>
+                       
                             <ExpenseInput expenseAmount={expenseAmount} setExpenseAmount={setExpenseAmount} />
                             <CategorySelector selectedCategoryId={selectedCategoryId} setSelectedCategoryId={setSelectedCategoryId} />
                             <DescriptionInput expenseDescription={expenseDescription} setExpenseDescription={setExpenseDescription} />
                             <SubmitButton handleSubmitExpense={handleSubmitExpense} />
-                        </View>
+             
                     </View>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
@@ -166,16 +151,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     container: {
-        flex: 1,
         alignItems: "center",
         backgroundColor: "#f3f1f8",
     },
-    formContainer: {
-        marginTop: 100,
-        width: "90%",
-        justifyContent: "center",
-        alignItems: "center",
-    },
+
     input: {
         fontSize: 16,
         borderWidth: 0.5,

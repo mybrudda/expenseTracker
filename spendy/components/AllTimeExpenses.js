@@ -1,11 +1,11 @@
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 import { db } from "../FirebaseConfig";
-
+import { expenseCategories } from "./expenseCategories";
 
 const timePeriods = [
   { label: "Past 1 Month", value: 1 },
@@ -14,31 +14,12 @@ const timePeriods = [
   { label: "All Time", value: "all" },
 ];
 
-
-const expenseCategories = [
-  { id: "1", name: "Rent", icon: "home" },
-  { id: "2", name: "Shopping", icon: "cart" },
-  { id: "3", name: "Food", icon: "food" },
-  { id: "4", name: "Transportation", icon: "car" },
-  { id: "5", name: "Utilities", icon: "flash" },
-  { id: "6", name: "Entertainment", icon: "movie" },
-  { id: "7", name: "Healthcare", icon: "hospital-box" },
-  { id: "8", name: "Fitness", icon: "dumbbell" },
-  { id: "9", name: "Insurance", icon: "shield-account" },
-  { id: "10", name: "Travel", icon: "airplane" },
-  { id: "11", name: "Education", icon: "school" },
-];
-
 const ExpenseCategorySummary = ({ navigation }) => {
-
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(1);
   const [categoryExpenses, setCategoryExpenses] = useState([]);
-
-
   const currentUser = useSelector((state) => state.user);
 
-
-  const fetchExpenses = async () => {
+  const fetchExpenses = () => {
     if (!currentUser || !currentUser.uid) {
       console.error("User is not logged in or uid is missing.");
       return;
@@ -46,17 +27,16 @@ const ExpenseCategorySummary = ({ navigation }) => {
 
     const userUid = currentUser.uid;
     const expensesRef = collection(db, "users", userUid, "savedExpenses");
+
     let expensesQuery = expensesRef;
 
-    // Filter expenses by time period if not 'all'
     if (selectedTimePeriod !== "all") {
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() - selectedTimePeriod);
       expensesQuery = query(expensesRef, where("SavedAt", ">=", startDate));
     }
 
-    try {
-      const querySnapshot = await getDocs(expensesQuery);
+    const unsubscribe = onSnapshot(expensesQuery, (querySnapshot) => {
       const expenses = querySnapshot.docs.map((doc) => doc.data());
 
       // Group expenses by category
@@ -72,20 +52,22 @@ const ExpenseCategorySummary = ({ navigation }) => {
         };
       });
 
-      setCategoryExpenses(expensesByCategory);
-    } catch (error) {
-      console.error("Error fetching expenses: ", error);
-    }
+      setCategoryExpenses(expensesByCategory); 
+    });
+
+    return unsubscribe; 
   };
 
-
   useEffect(() => {
-      fetchExpenses();
+   
+    const unsubscribe = fetchExpenses();
+
+  
+    return () => unsubscribe();
   }, [selectedTimePeriod]);
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
         <RNPickerSelect
           placeholder={{ label: "Select time period", value: null }}
@@ -102,7 +84,6 @@ const ExpenseCategorySummary = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      
       <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
         {categoryExpenses.length > 0 &&
           categoryExpenses.map((expense, index) => (
@@ -118,7 +99,6 @@ const ExpenseCategorySummary = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

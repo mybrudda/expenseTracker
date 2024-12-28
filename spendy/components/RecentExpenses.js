@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,70 +12,59 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 import { db } from "../FirebaseConfig";
+import { expenseCategories } from "./expenseCategories";
 
 const RecentExpenses = ({ navigation }) => {
   const [savedExpenses, setSavedExpenses] = useState([]);
   const [loading, setLoading] = useState(true); 
   const currentUser = useSelector((state) => state.user);
 
-  const expenseCategories = [
-    { id: "1", name: "Rent", icon: "home" },
-    { id: "2", name: "Shopping", icon: "cart" },
-    { id: "3", name: "Food", icon: "food" },
-    { id: "4", name: "Transportation", icon: "car" },
-    { id: "5", name: "Utilities", icon: "flash" },
-    { id: "6", name: "Entertainment", icon: "movie" },
-    { id: "7", name: "Healthcare", icon: "hospital-box" },
-    { id: "8", name: "Fitness", icon: "dumbbell" },
-    { id: "9", name: "Insurance", icon: "shield-account" },
-    { id: "10", name: "Travel", icon: "airplane" },
-    { id: "11", name: "Education", icon: "school" },
-  ];
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    
+    const unsubscribe = fetchExpenses();
+    
+    return () => unsubscribe();
+  }, [currentUser.uid]); 
 
-  const fetchExpenses = async () => {
-    try {
-      if (currentUser.uid) {
-        const savedExpensesRef = collection(
-          db,
-          "users",
-          currentUser.uid,
-          "savedExpenses"
-        );
+  const fetchExpenses = () => {
+    if (!currentUser?.uid) return;
 
-        const expensesQuery = query(savedExpensesRef, orderBy("SavedAt", "desc"));
-        const querySnapshot = await getDocs(expensesQuery);
+    const savedExpensesRef = collection(
+      db,
+      "users",
+      currentUser.uid,
+      "savedExpenses"
+    );
 
-        
-        const now = new Date();
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(now.getDate() - 7);
+    const expensesQuery = query(savedExpensesRef, orderBy("SavedAt", "desc"));
 
-        const expenses = querySnapshot.docs.map((doc) => ({
+   
+    const unsubscribe = onSnapshot(expensesQuery, (querySnapshot) => {
+      const now = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+
+      const expenses = querySnapshot.docs
+        .map((doc) => ({
           id: doc.id,
           ...doc.data(),
           SavedAt: doc.data().SavedAt?.toDate(),
           amount: parseFloat(doc.data().amount) || 0,
-        })).filter((expense) => expense.SavedAt && expense.SavedAt >= sevenDaysAgo)
+        }))
+        .filter((expense) => expense.SavedAt && expense.SavedAt >= sevenDaysAgo);
 
-        setSavedExpenses(expenses);
-      }
-    } catch (error) {
-      console.log("Error fetching expenses from Firestore: ", error.message);
-    } finally {
+      setSavedExpenses(expenses);
       setLoading(false); 
-    }
+    });
+
+    return unsubscribe; 
   };
 
   const handleKeyExtracting = (item) => item.id;
 
   const renderItem = ({ item }) => {
-    const formattedDate = item.SavedAt
-      ? format(item.SavedAt, "dd.MM.yyyy")
-      : "N/A";
+    const formattedDate = item.SavedAt ? format(item.SavedAt, "dd.MM.yyyy") : "N/A";
     const category = expenseCategories[item.categoryId - 1]; // Adjusted indexing
 
     return (
@@ -118,7 +107,6 @@ const RecentExpenses = ({ navigation }) => {
       </View>
 
       {loading ? (
-        // Show loading indicator while fetching
         <ActivityIndicator size="large" color="#9c66cc" style={styles.loader} />
       ) : (
         <FlatList
