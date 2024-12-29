@@ -8,9 +8,9 @@ import { db } from "../FirebaseConfig";
 import { expenseCategories } from "./expenseCategories";
 
 const timePeriods = [
-  { label: "Past 1 Month", value: 1 },
-  { label: "Past 2 Months", value: 2 },
-  { label: "Past Year", value: 12 },
+  { label: "1 Month", value: 1 },
+  { label: "2 Months", value: 2 },
+  { label: "Year", value: 12 },
   { label: "All Time", value: "all" },
 ];
 
