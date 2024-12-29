@@ -3,16 +3,15 @@ import { useState } from "react";
 import {
   Keyboard,
   Text,
-  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import { useDispatch } from "react-redux";
 import { auth } from "../FirebaseConfig";
-import { setUser } from '../redux/UserSlice';
+import { setUser } from "../redux/UserSlice";
 import { authstyle } from "../styles/AuthStyle";
+import CustomInput from "./CustomInput";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -24,14 +23,20 @@ const Login = ({ navigation }) => {
   const onLogin = async () => {
     try {
       if (email && password) {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         const user = userCredential.user;
 
         if (user && user.emailVerified) {
-          dispatch(setUser({
-            displayName: user.displayName,
-            uid: user.uid,
-          }));
+          dispatch(
+            setUser({
+              displayName: user.displayName,
+              uid: user.uid,
+            })
+          );
 
           setEmail("");
           setPassword("");
@@ -61,38 +66,20 @@ const Login = ({ navigation }) => {
 
           {errorMsg ? <Text style={authstyle.errorMsg}>{errorMsg}</Text> : null}
 
-          <View style={authstyle.inputContainer}>
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color="#888"
-              style={authstyle.icon}
-            />
-            <TextInput
-              style={authstyle.input}
-              value={email}
-              placeholder="Email"
-              onChangeText={setEmail}
-              placeholderTextColor="#888"
-            />
-          </View>
+          <CustomInput
+            value={email}
+            placeholder={"Email"}
+            onChangeText={setEmail}
+            iconName={"mail-outline"}
+          />
 
-          <View style={authstyle.inputContainer}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color="#888"
-              style={authstyle.icon}
-            />
-            <TextInput
-              style={authstyle.input}
-              value={password}
-              placeholder="Password"
-              onChangeText={setPassword}
-              placeholderTextColor="#888"
-              secureTextEntry={true}
-            />
-          </View>
+          <CustomInput
+            value={password}
+            placeholder={"Password"}
+            onChangeText={setPassword}
+            iconName={"lock-closed-outline"}
+            secureTextEntry={true}
+          />
 
           <TouchableOpacity style={authstyle.buttonContainer} onPress={onLogin}>
             <Text style={authstyle.buttonText}>Login</Text>

@@ -149,10 +149,10 @@ const AddExpense = () => {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
+        backgroundColor: "#f3e9fc",
     },
     container: {
         alignItems: "center",
-        backgroundColor: "#f3f1f8",
     },
 
     input: {
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     button: {
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#e8e6e6",
+        backgroundColor: "#ddd3fb",
         borderRadius: 10,
         padding: 15,
         marginRight: 10,
