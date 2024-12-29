@@ -1,5 +1,12 @@
 import { format } from "date-fns";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 import { db } from "../FirebaseConfig";
@@ -16,16 +24,24 @@ import { expenseCategories } from "./expenseCategories";
 
 const RecentExpenses = ({ navigation }) => {
   const [savedExpenses, setSavedExpenses] = useState([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const currentUser = useSelector((state) => state.user);
 
-
   useEffect(() => {
-    
     const unsubscribe = fetchExpenses();
-    
+
     return () => unsubscribe();
-  }, [currentUser.uid]); 
+  }, [currentUser.uid]);
+
+  const showErrorToast = (title, message) => {
+    Toast.show({
+      type: "error",
+      position: "top",
+      text1: title || "Something went wrong!",
+      text2: message,
+      visibilityTime: 5000,
+    });
+  };
 
   const fetchExpenses = () => {
     if (!currentUser?.uid) return;
@@ -39,11 +55,10 @@ const RecentExpenses = ({ navigation }) => {
 
     const expensesQuery = query(savedExpensesRef, orderBy("SavedAt", "desc"));
 
-   
     const unsubscribe = onSnapshot(expensesQuery, (querySnapshot) => {
       const now = new Date();
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(now.getDate() - 7);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
 
       const expenses = querySnapshot.docs
         .map((doc) => ({
@@ -52,19 +67,42 @@ const RecentExpenses = ({ navigation }) => {
           SavedAt: doc.data().SavedAt?.toDate(),
           amount: parseFloat(doc.data().amount) || 0,
         }))
-        .filter((expense) => expense.SavedAt && expense.SavedAt >= sevenDaysAgo);
+        .filter(
+          (expense) => expense.SavedAt && expense.SavedAt >= thirtyDaysAgo
+        );
 
       setSavedExpenses(expenses);
-      setLoading(false); 
+      setLoading(false);
     });
 
-    return unsubscribe; 
+    return unsubscribe;
   };
 
   const handleKeyExtracting = (item) => item.id;
 
+  const deleteItem = async (expenseId) => {
+    try {
+      const expenseRef = doc(
+        db,
+        "users",
+        currentUser.uid,
+        "savedExpenses",
+        expenseId
+      );
+      await deleteDoc(expenseRef);
+    } catch (error) {
+      console.log("Error deleting:", error.message);
+      showErrorToast(
+        "Error Deleting",
+        "Could not delete expense please try again later"
+      );
+    }
+  };
+
   const renderItem = ({ item }) => {
-    const formattedDate = item.SavedAt ? format(item.SavedAt, "dd.MM.yyyy") : "N/A";
+    const formattedDate = item.SavedAt
+      ? format(item.SavedAt, "dd.MM.yyyy")
+      : "N/A";
     const category = expenseCategories[item.categoryId - 1]; // Adjusted indexing
 
     return (
@@ -78,6 +116,12 @@ const RecentExpenses = ({ navigation }) => {
             <Text style={styles.amountText}>${item.amount}</Text>
             <Text style={styles.dateText}>{formattedDate}</Text>
           </View>
+          <TouchableOpacity
+            style={styles.deleteIcon}
+            onPress={() => deleteItem(item.id)}
+          >
+            <Icon name="trash-can" size={30} color="#94003d" />
+          </TouchableOpacity>
         </View>
 
         {item.description && (
@@ -89,13 +133,16 @@ const RecentExpenses = ({ navigation }) => {
     );
   };
 
-  const sevenDaysTotal = savedExpenses.reduce((total, expense) => total + expense.amount, 0);
+  const thirtyDaysTotal = savedExpenses.reduce(
+    (total, expense) => total + expense.amount,
+    0
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Past 7 Days</Text>
-        <Text style={styles.headerTotalSpent}>Total: {sevenDaysTotal}</Text>
+        <Text style={styles.headerText}>Past 30 Days</Text>
+        <Text style={styles.headerTotalSpent}>Total: {thirtyDaysTotal}</Text>
         <TouchableOpacity>
           <Icon
             name="plus-circle"
@@ -143,11 +190,11 @@ const styles = StyleSheet.create({
     color: "#4c2c8f",
     fontSize: 16,
   },
-  headerTotalSpent:{
+  headerTotalSpent: {
     color: "#4c2c8f",
     fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 1
+    fontWeight: "bold",
+    letterSpacing: 1,
   },
   loader: {
     flex: 1,
@@ -194,6 +241,9 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 12,
     color: "#888",
+  },
+  deleteIcon: {
+    padding: 10,
   },
   descriptionContainer: {
     backgroundColor: "#f9f9f9",
